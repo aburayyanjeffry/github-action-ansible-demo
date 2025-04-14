@@ -60,7 +60,7 @@ HOST	IP address or domain of the server
 
 ```
 
-📦 Ansible Playbook
+## 📦 Ansible Playbook
 ansible/install-nginx.yml:
 
 ```yaml
@@ -87,7 +87,7 @@ ansible/install-nginx.yml:
 This will create Invetory file from the HOST variable and apply the playbook
 
 .github/workflows/deploy-nginx.yml:
-```
+```yaml
 on:
   push:
     branches:
@@ -142,15 +142,17 @@ Watch the workflow run and deploy NGINX.
 
 🔍 Verify
 SSH into your server and run:
-
+```bash
 curl -I http://localhost
+```
 You should see an HTTP 200 response from NGINX.
 
 🧼 Cleanup
-To remove NGINX:
-
+To remove NGINX if it is not needed at the server:
+```bash
 sudo apt remove nginx -y
 sudo apt autoremove -y
+```
 
 📄 License
 MIT License
