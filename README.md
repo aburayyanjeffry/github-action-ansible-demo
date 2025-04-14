@@ -1,3 +1,4 @@
+![banner] (github-action-ansible.png)
 # 🛠️ GitHub Actions + Ansible: Install NGINX on Ubuntu Linux
 
 This repository demonstrates how to automate the installation of **NGINX** on a remote **Ubuntu Linux** server using **GitHub Actions** and **Ansible**.
