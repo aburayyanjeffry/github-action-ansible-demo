@@ -55,9 +55,7 @@ cat ~/.ssh/ansible_key
 Then paste it into the SSH_PRIVATE_KEY secret.
 
 📁 Repository Structure
-bash
-Copy
-Edit
+```
 .
 ├── .github
 │   └── workflows
@@ -66,6 +64,8 @@ Edit
 │   ├── hosts                    # Inventory file
 │   └── install-nginx.yml       # Ansible playbook
 ├── README.md
+
+```
 📦 Ansible Playbook
 ansible/install-nginx.yml:
 
@@ -94,47 +94,51 @@ The {{ HOST }} placeholder will be dynamically replaced in the workflow.
 
 🤖 GitHub Actions Workflow
 .github/workflows/deploy-nginx.yml:
-
-yaml
-Copy
-Edit
-name: Deploy NGINX via Ansible
-
+```
 on:
   push:
     branches:
-      - main
+    - main
+  workflow_dispatch:
+    # allows manual trigger from the Actions tab
 
 jobs:
-  deploy:
+  run-ansible:
     runs-on: ubuntu-latest
 
+    env:
+      TARGET_HOST: ${{ secrets.TARGET_HOST }}
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
 
-      - name: Install Ansible
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+      shell: bash
 
-      - name: Add SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+    - name: Create dynamic inventory
+      run: |
+        echo "[webservers]" > hosts.ini
+        echo "$TARGET_HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
 
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
-        run: |
-          sed -i "s/{{ HOST }}/${{ secrets.HOST }}/g" ansible/hosts
-          ansible-playbook -i ansible/hosts ansible/install-nginx.yml -u ${{ secrets.USER }}
+    - name: Test manual SSH connection (debug)
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$TARGET_HOST "echo 'SSH Success 🎉'"
+
+    - name: Run Ansible Playbook
+      run: |
+        ansible-playbook nginx_hello.yml -i hosts.ini
+```
 
 ✅ Test It Out
 Push your code to the main branch.
