@@ -15,7 +15,7 @@ We’ll set up a GitHub Actions workflow that:
 
 ## 📝 Prerequisites
 
-- A remote Ubuntu Linux server (tested on Ubuntu 20.04+).
+- A remote Ubuntu Linux server with a known IP address or hostname. This IP or hostname will be referred to as `HOST` from here onward.
 - SSH access to the server (with a private key).
 - A GitHub repository.
 - A basic understanding of Ansible and GitHub Actions.
@@ -28,48 +28,42 @@ We’ll set up a GitHub Actions workflow that:
 
    ```bash
    ssh-keygen -t rsa -b 4096 -f ~/.ssh/ansible_key
+   ```
 This creates:
-
+```
 ~/.ssh/ansible_key (private key)
-
 ~/.ssh/ansible_key.pub (public key)
+```
 
 Copy the public key to your Ubuntu server:
+```
+ssh-copy-id -i ~/.ssh/ansible_key.pub ubuntu@HOST
+```
 
-ssh-copy-id -i ~/.ssh/ansible_key.pub <user>@<host>
-Replace <user> with your SSH username (e.g., ubuntu) and <host> with your server's IP or domain.
-
-🔐 Setup Secrets in GitHub
+## 🔐 Setup Secrets in GitHub
 Go to your repository > Settings > Secrets and variables > Actions > New repository secret:
 
 Name	Description
 SSH_PRIVATE_KEY	Content of your ansible_key (private key)
 HOST	IP address or domain of the server
-USER	SSH username (e.g., ubuntu)
-To copy the private key to your clipboard:
 
-bash
-Copy
-Edit
-cat ~/.ssh/ansible_key
-Then paste it into the SSH_PRIVATE_KEY secret.
 
-📁 Repository Structure
+## 📁 Repository Structure
 ```
 .
 ├── .github
 │   └── workflows
 │       └── deploy-nginx.yml     # GitHub Actions workflow
 ├── ansible
-│   ├── hosts                    # Inventory file
 │   └── install-nginx.yml       # Ansible playbook
 ├── README.md
 
 ```
+
 📦 Ansible Playbook
 ansible/install-nginx.yml:
 
-yaml
+```yaml
 - name: Install and start NGINX
   hosts: webservers
   become: yes
@@ -86,13 +80,12 @@ yaml
         name: nginx
         state: started
         enabled: yes
+```
 
-🗂️ Inventory File
-[webservers]
-{{ HOST }}
-The {{ HOST }} placeholder will be dynamically replaced in the workflow.
 
-🤖 GitHub Actions Workflow
+## 🤖 GitHub Actions Workflow
+This will create Invetory file from the HOST variable and apply the playbook
+
 .github/workflows/deploy-nginx.yml:
 ```
 on:
@@ -107,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TARGET_HOST: ${{ secrets.TARGET_HOST }}
+      HOST: ${{ secrets.HOST }}
 
     steps:
     - name: Checkout code
@@ -123,21 +116,21 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+        ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
       shell: bash
 
     - name: Create dynamic inventory
       run: |
         echo "[webservers]" > hosts.ini
-        echo "$TARGET_HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
+        echo "$HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
 
     - name: Test manual SSH connection (debug)
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$TARGET_HOST "echo 'SSH Success 🎉'"
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$HOST "echo 'SSH Success 🎉'"
 
     - name: Run Ansible Playbook
       run: |
-        ansible-playbook nginx_hello.yml -i hosts.ini
+        ansible-playbook ansible/nginx_hello.yml -i hosts.ini
 ```
 
 ✅ Test It Out
