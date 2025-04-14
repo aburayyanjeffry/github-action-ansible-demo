@@ -1,0 +1,45 @@
+name: Ansible Playbook CI
+
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+    # allows manual trigger from the Actions tab
+
+jobs:
+  run-ansible:
+    runs-on: ubuntu-latest
+
+    env:
+      TARGET_HOST: ${{ secrets.TARGET_HOST }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
+
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+      shell: bash
+
+    - name: Create dynamic inventory
+      run: |
+        echo "[webservers]" > hosts.ini
+        echo "$TARGET_HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
+
+    - name: Test manual SSH connection (debug)
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$TARGET_HOST "echo 'SSH Success 🎉'"
+
+    - name: Run Ansible Playbook
+      run: |
+        ansible-playbook nginx_hello.yml -i hosts.ini
