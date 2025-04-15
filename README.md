@@ -169,7 +169,7 @@ Watch the workflow run and deploy NGINX.
 
 ## 🔍 Verify
 We already verified it in the workflow by curling the TARGET_HOST. You can double-check it by accessing it through your web browser.
-![log](images/github-browser .png)
+![log](images/github-browser.png)
 
 ## 🧼 Cleanup
 To remove NGINX if it is not needed at the server:
