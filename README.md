@@ -99,6 +99,8 @@ This will create Invetory file from the HOST variable and apply the playbook
 
 .github/workflows/deploy-nginx.yml:
 ```yaml
+name: Install Nginx Playbook
+
 on:
   push:
     branches:
@@ -111,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      HOST: ${{ secrets.HOST }}
+      TARGET_HOST: ${{ secrets.TARGET_HOST }}
 
     steps:
     - name: Checkout code
@@ -125,23 +127,36 @@ jobs:
     - name: Set up SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+        ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
       shell: bash
 
     - name: Create dynamic inventory
       run: |
         echo "[webservers]" > hosts.ini
-        echo "$HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
+        echo "$TARGET_HOST ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> hosts.ini
 
     - name: Test manual SSH connection (debug)
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$HOST "echo 'SSH Success 🎉'"
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$TARGET_HOST "echo 'SSH Success 🎉'"
 
     - name: Run Ansible Playbook
       run: |
         ansible-playbook ansible/nginx_hello.yml -i hosts.ini
+
+    - name: Verify Nginx Hello World Page
+      run: |
+        echo "Checking if Nginx is serving the Hello World page..."
+        response=$(curl -s http://$TARGET_HOST)
+        echo "$response"
+
+        if echo "$response" | grep -qi "hello world"; then
+          echo "✅ Nginx is serving the expected content!"
+        else
+          echo "❌ Nginx did not serve the expected Hello World content."
+          exit 1
+        fi
 ```
 
 ✅ Test It Out

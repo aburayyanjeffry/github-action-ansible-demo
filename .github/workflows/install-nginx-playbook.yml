@@ -43,3 +43,16 @@ jobs:
     - name: Run Ansible Playbook
       run: |
         ansible-playbook ansible/nginx_hello.yml -i hosts.ini
+
+    - name: Verify Nginx Hello World Page
+      run: |
+        echo "Checking if Nginx is serving the Hello World page..."
+        response=$(curl -s http://$TARGET_HOST)
+        echo "$response"
+
+        if echo "$response" | grep -qi "hello world"; then
+          echo "✅ Nginx is serving the expected content!"
+        else
+          echo "❌ Nginx did not serve the expected Hello World content."
+          exit 1
+        fi
