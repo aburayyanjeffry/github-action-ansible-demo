@@ -15,7 +15,7 @@ We’ll set up a GitHub Actions workflow that:
 
 ## 📝 Prerequisites
 
-- A remote Ubuntu Linux server with a known IP address or hostname. This IP or hostname will be referred to as `HOST` from here onward.
+- A remote Ubuntu Linux server with a known IP address or hostname. This IP or hostname will be referred to as `TARGET_HOST` from here onward.
 - SSH access to the server (with a private key).
 - A GitHub repository.
 - A basic understanding of Ansible and GitHub Actions.
@@ -47,7 +47,7 @@ Name	Description
 SSH_PRIVATE_KEY	Content of your ansible_key (private key)
 HOST	IP address or domain of the server
 
-![banner](images/github-vars.png)
+![repo](images/github-repo-vars.png)
 ## 📁 Repository Structure
 GitHub Actions requires a specific directory structure for its workflows. The structure should be as follows.
 For better organization, we’ll place the Ansible playbook in a directory named `Ansible`. 
@@ -159,28 +159,26 @@ jobs:
         fi
 ```
 
-✅ Test It Out
+## ✅ Test It Out
 Push your code to the main branch.
 
 Go to Actions tab.
 
 Watch the workflow run and deploy NGINX.
+![log](images/github-action-logs.png)
 
-🔍 Verify
-SSH into your server and run:
-```bash
-curl -I http://localhost
-```
-You should see an HTTP 200 response from NGINX.
+## 🔍 Verify
+We already verified it in the workflow by curling the TARGET_HOST. You can double-check it by accessing it through your web browser.
+![log](images/github-browser .png)
 
-🧼 Cleanup
+## 🧼 Cleanup
 To remove NGINX if it is not needed at the server:
 ```bash
 sudo apt remove nginx -y
 sudo apt autoremove -y
 ```
 
-📄 License
+## 📄 License
 MIT License
 
 
