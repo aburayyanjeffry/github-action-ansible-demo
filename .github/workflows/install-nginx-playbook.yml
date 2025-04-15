@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TARGET_HOST: ${{ secrets.HOST }}
+      TARGET_HOST: ${{ secrets.TARGET_HOST }}
 
     steps:
     - name: Checkout code
@@ -28,8 +28,6 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        echo  ${{ secrets.HOST }}
-        echo  "$TARGET_HOST"
         ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts
       shell: bash
 
