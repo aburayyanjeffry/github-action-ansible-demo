@@ -1,0 +1,25 @@
+- name: Install Hello World NGINX
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Install NGINX
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Create Hello World index.html
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          <html>
+          <head><title>Hello World</title></head>
+          <body><h1>Hello, World from Ansible!</h1></body>
+          </html>
+
+    - name: Ensure NGINX is running
+      service:
+        name: nginx
+        state: started
+        enabled: yes

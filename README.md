@@ -1,4 +1,4 @@
-![banner](github-action-ansible.png)
+![banner](images/github-action-ansible.png)
 # 🛠️ GitHub Actions + Ansible: Install NGINX on Ubuntu Linux
 
 This repository demonstrates how to automate the installation of **NGINX** on a remote **Ubuntu Linux** server using **GitHub Actions** and **Ansible**.
@@ -27,12 +27,12 @@ We’ll set up a GitHub Actions workflow that:
 1. **Generate SSH key named `ansible_key`** on your local machine:
 
    ```bash
-   ssh-keygen -t rsa -b 4096 -f ~/.ssh/ansible_key
+   ssh-keygen -t rsa -b 4096 -f ansible_key
    ```
 This creates:
 ```
-~/.ssh/ansible_key (private key)
-~/.ssh/ansible_key.pub (public key)
+ansible_key (private key)
+ansible_key.pub (public key)
 ```
 
 Copy the public key to your Ubuntu server:
@@ -47,8 +47,10 @@ Name	Description
 SSH_PRIVATE_KEY	Content of your ansible_key (private key)
 HOST	IP address or domain of the server
 
-
+![banner](images/github-vars.png)
 ## 📁 Repository Structure
+GitHub Actions requires a specific directory structure for its workflows. The structure should be as follows.
+For better organization, we’ll place the Ansible playbook in a directory named `Ansible`. 
 ```
 .
 ├── .github
@@ -61,10 +63,10 @@ HOST	IP address or domain of the server
 ```
 
 ## 📦 Ansible Playbook
-ansible/install-nginx.yml:
+ansible/install-nginx-playbook.yml:
 
 ```yaml
-- name: Install and start NGINX
+- name: Install Hello World NGINX
   hosts: webservers
   become: yes
 
@@ -74,6 +76,15 @@ ansible/install-nginx.yml:
         name: nginx
         state: present
         update_cache: yes
+
+    - name: Create Hello World index.html
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          <html>
+          <head><title>Hello World</title></head>
+          <body><h1>Hello, World from Ansible!</h1></body>
+          </html>
 
     - name: Ensure NGINX is running
       service:
